@@ -7,6 +7,9 @@ import multer from "multer";
 const app = express();
 
 app.use(cors())
+app.get("/", (req, res) => {
+    res.json({Message: "Hello"})
+})
 app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
