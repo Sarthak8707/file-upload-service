@@ -3,65 +3,36 @@ import cors from "cors";
 import {fileURLToPath} from "url";
 import path from "path";
 import multer from "multer";
+import { configDotenv } from "dotenv";
+import cloudinary from "./cloudinary.js";
 
 const app = express();
-
+configDotenv();
 app.use(cors())
 app.get("/", (req, res) => {
     res.json({Message: "Hello"})
 })
 app.use(express.json());
 
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
 
 
 
-// const storage = multer.diskStorage({
-//     destination: (req, file, cb) => {
-//         cb(null, path.join(__dirname, "uploads/"));
-//     },
-//     filename: (req, file, cb) => {
-//         cb(null, Date.now() + "-" + file.originalname)
-//     }
-// })
+const upload = multer({storage: multer.memoryStorage()});
 
-// const upload = multer({ storage });
 
-// // file processing must be done as a middleware 
-
-// app.post("/upload", upload.single("file"), (req, res) => {
+app.post("/upload", upload.single("file"), async (req, res) => {
     
-//     // file handled as middleware
-//     // express doesn't deal with files as it only deals with json
+    const result = cloudinary.uploader.upload_stream({folder: "uploads"}, (error, result) => {
+        
+        if(error){
+            return res.json({msg: "An error occurred"});
+        }
+        res.json({msg: "Uploaded successfully"});       
 
-//     res.json({message: "file uploaded", file: req.file});
-//     console.log("Image just got uploaded successfully!");
+    });
 
+    result.end(req.file.buffer);
 
-// })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// upload.single("file"),
-
-app.post("/upload",  (req, res) => {
-    console.log("Image uploaded")
 })
 
 
