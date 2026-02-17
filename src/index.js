@@ -12,24 +12,59 @@ app.get("/", (req, res) => {
 })
 app.use(express.json());
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "src/uploads/");
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + "-" + file.originalname)
-    }
+
+
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, path.join(__dirname, "uploads/"));
+//     },
+//     filename: (req, file, cb) => {
+//         cb(null, Date.now() + "-" + file.originalname)
+//     }
+// })
+
+// const upload = multer({ storage });
+
+// // file processing must be done as a middleware 
+
+// app.post("/upload", upload.single("file"), (req, res) => {
+    
+//     // file handled as middleware
+//     // express doesn't deal with files as it only deals with json
+
+//     res.json({message: "file uploaded", file: req.file});
+//     console.log("Image just got uploaded successfully!");
+
+
+// })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// upload.single("file"),
+
+app.post("/upload",  (req, res) => {
+    console.log("Image uploaded")
 })
 
-const upload = multer({ storage });
 
-app.post("/upload", upload.single("file"), (req, res) => {
-    res.json({message: "file uploaded", file: req.file});
-    console.log("Image just got uploaded successfully!");
-})
 
 
 app.listen(3000, () => {
