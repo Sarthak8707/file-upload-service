@@ -3,15 +3,12 @@ import cors from "cors";
 import {fileURLToPath} from "url";
 import path from "path";
 import multer from "multer";
-import { configDotenv } from "dotenv";
+import dotenv from "dotenv";
 import cloudinary from "./cloudinary.js";
 
 const app = express();
-configDotenv();
+dotenv.config();
 app.use(cors())
-app.get("/", (req, res) => {
-    res.json({Message: "Hello"})
-})
 app.use(express.json());
 
 
@@ -21,21 +18,20 @@ const upload = multer({storage: multer.memoryStorage()});
 
 
 app.post("/upload", upload.single("file"), async (req, res) => {
-    
-    const result = cloudinary.uploader.upload_stream({folder: "uploads"}, (error, result) => {
-        
-        if(error){
-            return res.json({msg: "An error occurred"});
-        }
-        res.json({msg: "Uploaded successfully"});       
-
+  try {
+    const job = await uploadQueue.add("uploadJob", {
+      fileBuffer: req.file.buffer,
+      fileName: req.file.originalname,
     });
 
-    result.end(req.file.buffer);
-
-})
-
-
+    res.json({
+      message: "File added to queue",
+      jobId: job.id,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
 app.listen(3000, () => {
