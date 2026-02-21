@@ -6,7 +6,7 @@ import multer from "multer";
 import dotenv from "dotenv";
 import cloudinary from "./cloudinary.js";
 import { uploadQueue } from "./queue.js";
-import "./worker.js"; // start worker
+
 
 const app = express();
 dotenv.config();
