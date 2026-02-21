@@ -1,6 +1,8 @@
 import { Worker } from "bullmq";
 import IORedis from "ioredis";
 import cloudinary from "./cloudinary.js";
+import multer from "multer";
+import fs from "fs";
 
 const connection = new IORedis({
   host: "127.0.0.1",
@@ -8,25 +10,34 @@ const connection = new IORedis({
   maxRetriesPerRequest: null,
 });
 
+
+
+
+
 const worker = new Worker(
   "uploadQueue",
   async (job) => {
 
-    const { fileBuffer, fileName } = job.data;
+    const { fileName, filePath } = job.data;
 
-    const buffer = Buffer.from(fileBuffer.data);
 
-    return new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: "uploads", public_id: fileName },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
+    try{
+        const result = await cloudinary.uploader.upload(filePath, {
+            folder: "uploads",
+            public_id: fileName
+        })
 
-      stream.end(buffer);
-    });
+        fs.unlinkSync(filePath);
+
+    }
+    catch(err){
+        console.err(err);
+        
+        // throw err manually so that bullmq retries
+
+        throw err;
+    }
+
   },
   { connection }
 );
@@ -36,5 +47,14 @@ worker.on("completed", (job, result) => {
 });
 
 worker.on("failed", (job, err) => {
+    
   console.error("Upload failed:", err);
+  const {filePath} = job.data;
+
+  if(fs.existsSync(filePath)){
+    fs.unlinkSynb(filePath);
+  }
+
 });
+
+

@@ -16,23 +16,36 @@ app.use(express.json());
 
 
 
-const upload = multer({storage: multer.memoryStorage()});
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "src/uploads/");
+    }
+}, {
+    filename: (req, file, cb) => {
+        const uniqueName = Date.now() + file.originalname;
+        cb(null, uniqueName);
+    }
+})
+
+
+
+const upload = multer({storage});
 
 
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
     const job = await uploadQueue.add("uploadJob", {
-      fileBuffer: req.file.buffer,
+      filePath: req.file.path,
       fileName: req.file.originalname,
     }, {
-        attempts: 2, // retry 2 times
+        attempts: 2,
         backoff: {
-          type: "exponential",
-          delay: 3000,
+            type: "exponential",
+            delay: 10000
         },
         removeOnComplete: true,
-        removeOnFail: false,
-      });
+        removeOnFail: false
+    });
 
     res.json({
       message: "File added to queue",
