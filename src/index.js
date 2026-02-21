@@ -5,6 +5,8 @@ import path from "path";
 import multer from "multer";
 import dotenv from "dotenv";
 import cloudinary from "./cloudinary.js";
+import { uploadQueue } from "./queue.js";
+import "./worker.js"; // start worker
 
 const app = express();
 dotenv.config();
@@ -22,12 +24,21 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     const job = await uploadQueue.add("uploadJob", {
       fileBuffer: req.file.buffer,
       fileName: req.file.originalname,
-    });
+    }, {
+        attempts: 2, // retry 2 times
+        backoff: {
+          type: "exponential",
+          delay: 3000,
+        },
+        removeOnComplete: true,
+        removeOnFail: false,
+      });
 
     res.json({
       message: "File added to queue",
       jobId: job.id,
     });
+    console.log("done!!")
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -1,13 +1,20 @@
 import { Worker } from "bullmq";
 import IORedis from "ioredis";
-import cloudinary from "./cloudinaryconfig.js";
+import cloudinary from "./cloudinary.js";
 
-const connection = new IORedis();
+const connection = new IORedis({
+  host: "127.0.0.1",
+  port: 6379,
+  maxRetriesPerRequest: null,
+});
 
 const worker = new Worker(
   "uploadQueue",
   async (job) => {
+
     const { fileBuffer, fileName } = job.data;
+
+    const buffer = Buffer.from(fileBuffer.data);
 
     return new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
@@ -18,7 +25,7 @@ const worker = new Worker(
         }
       );
 
-      stream.end(fileBuffer);
+      stream.end(buffer);
     });
   },
   { connection }
